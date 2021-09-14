@@ -17,6 +17,7 @@ const (
 	streamUpstream = "stream_test"
 	streamZoneSync = "zone_test_sync"
 	locationZone   = "location_test"
+	limitReqZone   = "limit_req_zone_test"
 	resolverMetric = "resolver_test"
 )
 
@@ -690,6 +691,14 @@ func TestStats(t *testing.T) {
 	_, _, _, err = c.UpdateHTTPServers(upstream, []client.UpstreamServer{})
 	if err != nil {
 		t.Errorf("Couldn't remove servers: %w", err)
+	}
+
+	if limReqZone, ok := stats.LimitReqZones[limitReqZone]; ok {
+		if limReqZone.Passed < 1 {
+			t.Errorf("LimitReqZone stats missing: %v", limReqZone.Passed)
+		}
+	} else {
+		t.Errorf("LimitReqZone %v not found", limReqZone)
 	}
 }
 

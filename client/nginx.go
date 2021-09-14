@@ -16,7 +16,7 @@ import (
 
 const (
 	// APIVersion is the default version of NGINX Plus API supported by the client.
-	APIVersion = 5
+	APIVersion = 6
 
 	pathNotFoundCode  = "PathNotFound"
 	streamContext     = true
@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	supportedAPIVersions = versions{4, 5}
+	supportedAPIVersions = versions{4, 5, 6}
 
 	// Default values for servers in Upstreams.
 	defaultMaxConns    = 0
@@ -130,6 +130,8 @@ type Stats struct {
 	StreamZoneSync    *StreamZoneSync
 	LocationZones     LocationZones
 	Resolvers         Resolvers
+	// LimitConnZones        interface{}
+	LimitReqZones LimitReqZones
 }
 
 // NginxInfo contains general information about NGINX Plus.
@@ -416,6 +418,18 @@ type ResolverResponses struct {
 // Processes represents processes related stats
 type Processes struct {
 	Respawned int64
+}
+
+// LimitReqZones represents limit_req_zone related stats
+type LimitReqZones map[string]LimitReqZone
+
+// LimitReqZone represents limit_req_zone related stats
+type LimitReqZone struct {
+	Passed         int64
+	Delayed        int64
+	Rejected       int64
+	DelayedDryRun  int64
+	RejectedDryRun int64
 }
 
 // NewNginxClient creates an NginxClient with the latest supported version.
@@ -1052,7 +1066,7 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 
 	requests, err := client.GetHTTPRequests()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get stats: %w", err)
+		return nil, fmt.Errorf("failed to get stats: %w", err)
 	}
 
 	ssl, err := client.GetSSL()
@@ -1095,6 +1109,10 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		return nil, fmt.Errorf("failed to get stats: %w", err)
 	}
 
+	limitReqZones, err := client.GetLimitReqZones()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %w", err)
+	}
 	return &Stats{
 		NginxInfo:         *info,
 		Caches:            *caches,
@@ -1110,6 +1128,7 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		StreamZoneSync:    streamZoneSync,
 		LocationZones:     *locationZones,
 		Resolvers:         *resolvers,
+		LimitReqZones:     *limitReqZones,
 	}, nil
 }
 
@@ -1279,6 +1298,16 @@ func (client *NginxClient) GetProcesses() (*Processes, error) {
 	}
 
 	return &processes, err
+}
+
+// GetLimitReqZones returns http/server_zones stats.
+func (client *NginxClient) GetLimitReqZones() (*LimitReqZones, error) {
+	var zones LimitReqZones
+	err := client.get("http/limit_reqs", &zones)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get server zones: %w", err)
+	}
+	return &zones, err
 }
 
 // KeyValPairs are the key-value pairs stored in a zone.
