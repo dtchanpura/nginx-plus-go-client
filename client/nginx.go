@@ -1305,7 +1305,7 @@ func (client *NginxClient) GetLimitReqZones() (*LimitReqZones, error) {
 	var zones LimitReqZones
 	err := client.get("http/limit_reqs", &zones)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get server zones: %w", err)
+		return nil, fmt.Errorf("failed to get limit request zones: %w", err)
 	}
 	return &zones, err
 }
