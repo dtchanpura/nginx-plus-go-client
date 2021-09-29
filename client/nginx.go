@@ -16,7 +16,7 @@ import (
 
 const (
 	// APIVersion is the default version of NGINX Plus API supported by the client.
-	APIVersion = 6
+	APIVersion = 7
 
 	pathNotFoundCode  = "PathNotFound"
 	streamContext     = true
@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	supportedAPIVersions = versions{4, 5, 6}
+	supportedAPIVersions = versions{4, 5, 6, 7}
 
 	// Default values for servers in Upstreams.
 	defaultMaxConns    = 0
@@ -277,7 +277,9 @@ type Responses struct {
 	Responses3xx uint64 `json:"3xx"`
 	Responses4xx uint64 `json:"4xx"`
 	Responses5xx uint64 `json:"5xx"`
-	Total        uint64
+
+	Codes map[string]uint64
+	Total uint64
 }
 
 // Sessions represents stream session related stats.
